@@ -1,12 +1,14 @@
 # Lo-Fi Terminal
 
-Claude Code on a 90s CRT, composited onto a painted lo-fi bedroom, with
-bundled music playing.
+<img width="1920" height="1080" alt="Screenshot 2026-10-15 223800" src="https://github.com/user-attachments/assets/266ca735-467b-47e1-a7a5-121257b90823" />
+
+Chill lo-fi vibe coding
 
 ## Run / build
 
 Works on Windows (PowerShell) and macOS (your login shell, usually zsh).
 Claude Code must be installed and working in a normal terminal first.
+
 
     npm install
     npm start            # dev
