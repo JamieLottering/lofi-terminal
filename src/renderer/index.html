@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' app:; script-src 'self' app: 'unsafe-inline'; style-src 'self' app: 'unsafe-inline'; font-src 'self' app:; media-src 'self' app:; img-src 'self' app: data: blob:">
+  <title>Lo-Fi Terminal</title>
+  <link rel="stylesheet" href="/node_modules/@xterm/xterm/css/xterm.css">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "/node_modules/three/build/three.module.js",
+        "@xterm/xterm": "/node_modules/@xterm/xterm/lib/xterm.mjs"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="stage"></div>
+  <!-- Real xterm instance: kept off-screen, owns keyboard focus and parsing. -->
+  <div id="xterm-host"></div>
+  <form id="panel" hidden onsubmit="return false"></form>
+  <div id="fatal" hidden>
+    <h1>Couldn't start the renderer</h1>
+    <p>Your GPU / WebGL setup failed to initialise.</p>
+    <pre id="fatal-msg"></pre>
+  </div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

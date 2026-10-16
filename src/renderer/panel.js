@@ -1,0 +1,45 @@
+// F4 settings overlay. Every change is applied and persisted immediately.
+import { SCENES } from './scenes.js';
+export class SettingsPanel {
+  constructor(root, update, audio, refocus) {
+    this.root = root;
+    this.open = false;
+    this.refocus = refocus;
+    root.innerHTML = `
+      <h2>SETTINGS <span>F4 to close</span></h2>
+      <label>Scene<select name="scene">${Object.entries(SCENES).map(([id, s]) => `<option value="${id}">${s.name}</option>`).join('')}</select></label>
+      <div class="status">Music: <b id="music-status">-</b></div>
+      <label>Music volume<input name="musicVolume" type="range" min="0" max="1" step="0.01"></label>
+      <label>Font<select name="font"><option value="modern">Modern (Cascadia / Consolas)</option><option value="retro">Retro (VT323)</option></select></label>
+      <label>Font size<input name="fontSize" type="range" min="11" max="24" step="1"></label>
+      <label>CRT effect strength<input name="crtStrength" type="range" min="0" max="1" step="0.01"></label>
+      <label class="row"><input name="postFx" type="checkbox"> Screen glow</label>
+      <p class="hint">F3 play/pause music &middot; F4 settings &middot; F11 fullscreen &middot; Ctrl+Shift+C/V copy/paste &middot; right-click copy/paste</p>
+    `;
+    const statusEl = root.querySelector('#music-status');
+    audio.onStatus = (s) => { statusEl.textContent = s; };
+    statusEl.textContent = audio.status;
+
+    root.querySelectorAll('input, select').forEach((el) => {
+      const ev = el.type === 'text' ? 'change' : 'input';
+      el.addEventListener(ev, () => {
+        let v = el.type === 'checkbox' ? el.checked : el.value;
+        if (el.type === 'range') v = Number(v);
+        update({ [el.name]: v });
+      });
+    });
+  }
+
+  toggle(settings) {
+    this.open = !this.open;
+    this.root.hidden = !this.open;
+    if (this.open) {
+      for (const el of this.root.querySelectorAll('input, select')) {
+        if (el.type === 'checkbox') el.checked = !!settings[el.name];
+        else el.value = settings[el.name];
+      }
+    } else {
+      this.refocus();
+    }
+  }
+}
