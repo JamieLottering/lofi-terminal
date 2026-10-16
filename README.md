@@ -5,27 +5,42 @@ bundled music playing.
 
 ## Run / build
 
-    npm install
-    npm start        # dev
-    npm run dist     # dist/ -> installer + portable .exe
+Works on Windows (PowerShell) and macOS (your login shell, usually zsh).
+Claude Code must be installed and working in a normal terminal first.
 
-On launch it starts PowerShell running `claude.cmd` (Claude Code must be installed).
+    npm install
+    npm start            # dev
+    npm run dist:win     # on Windows -> dist/ installer + portable .exe
+    npm run dist:mac     # on a Mac   -> dist/ .dmg + .zip (arm64 and x64)
+
+Each platform's build must be made on that platform.
+
+On launch it opens a shell with Claude Code running:
+- **Windows:** PowerShell running `claude.cmd` (sidesteps the script execution policy).
+- **macOS:** `$SHELL -l -i` running `claude`, so PATH from `~/.zprofile` / `~/.zshrc`
+  (nvm, Homebrew) is available even when launched from Finder.
+
+When Claude exits you're left at a normal shell prompt.
+
+The builds aren't code-signed. Windows SmartScreen: "More info" -> "Run anyway".
+macOS Gatekeeper: right-click the app -> Open (or `xattr -cr "/Applications/Lo-Fi Terminal.app"`).
 
 ## Controls
 
-| Key | Action |
-| --- | --- |
-| F3 | Play / pause music |
-| F4 | Settings (scene, volume, font, CRT strength, screen glow) |
-| F11 | Fullscreen |
-| Ctrl+V or Ctrl+Shift+V | Paste |
-| Ctrl+C (with selection) or Ctrl+Shift+C | Copy (Ctrl+C with no selection still interrupts) |
-| Right-click | Copy selection, or paste if nothing selected |
-| Drag on screen | Select text |
-| Wheel | Scroll |
+| Action | Windows | macOS |
+| --- | --- | --- |
+| Settings | F4 | Cmd+, |
+| Play / pause music | F3 | View menu (or fn+F3) |
+| Fullscreen | F11 | Ctrl+Cmd+F |
+| Paste | Ctrl+V, Ctrl+Shift+V, right-click | Cmd+V, right-click |
+| Copy selection | Ctrl+C (with selection), Ctrl+Shift+C, right-click | Cmd+C, right-click |
+| Interrupt | Ctrl+C (no selection) | Ctrl+C |
+| Select text | Drag on screen | Drag on screen |
+| Scroll | Wheel | Trackpad / wheel |
 
 Every other key goes straight to the terminal. Settings are saved in
-`%APPDATA%/lofi-terminal/settings.json`.
+`%APPDATA%/lofi-terminal/settings.json` (Windows) or
+`~/Library/Application Support/lofi-terminal/settings.json` (macOS).
 
 ## Music
 

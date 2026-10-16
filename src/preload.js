@@ -18,4 +18,6 @@ contextBridge.exposeInMainWorld('bridge', {
     write: (text) => ipcRenderer.send('clip:write', text),
   },
   toggleFullscreen: () => ipcRenderer.send('win:fullscreen'),
+  platform: process.platform,
+  onMenu: (fn) => ipcRenderer.on('menu', (_e, action) => fn(action)),
 });

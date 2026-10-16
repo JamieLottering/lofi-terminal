@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, protocol, clipboard } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, protocol, clipboard } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
@@ -76,19 +76,33 @@ function registerProtocols() {
 // ---------- pty ----------
 let shell = null;
 
+/** The shell to run, with Claude Code started in it. */
+function shellCommand() {
+  if (process.platform === 'win32') {
+    // claude.cmd rather than claude: the npm .ps1 shim is blocked when the
+    // PowerShell execution policy is Restricted (the Windows default).
+    return { file: 'powershell.exe', args: ['-NoLogo', '-NoExit', '-Command', 'claude.cmd'] };
+  }
+  // macOS/Linux: a login + interactive shell loads PATH from ~/.zprofile and
+  // ~/.zshrc (nvm, Homebrew), which apps launched from Finder don't inherit.
+  // When claude exits, fall back to a normal shell, like PowerShell's -NoExit.
+  const sh = process.env.SHELL || '/bin/zsh';
+  return { file: sh, args: ['-l', '-i', '-c', `claude; exec "${sh}" -l -i`] };
+}
+
 function startShell(win, cols, rows) {
   if (shell) {
     try { shell.kill(); } catch {}
     shell = null;
   }
-  // claude.cmd rather than claude: the npm .ps1 shim is blocked when the
-  // PowerShell execution policy is Restricted (the Windows default).
-  const proc = pty.spawn('powershell.exe', ['-NoLogo', '-NoExit', '-Command', 'claude.cmd'], {
+  const { file, args } = shellCommand();
+  const proc = pty.spawn(file, args, {
     name: 'xterm-256color',
     cols,
     rows,
     cwd: os.homedir(),
-    env: { ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+    // Apps launched from Finder get no LANG; without it zsh mangles UTF-8.
+    env: { LANG: 'en_US.UTF-8', ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
   });
   shell = proc;
   proc.onData((data) => {
@@ -190,7 +204,7 @@ app.whenReady().then(() => {
   ipcMain.handle('music:list', () => {
     // Bundled tracks: every audio file in src/assets/music, alphabetical.
     try {
-      return fs.readdirSync(MUSIC_DIR).filter((f) => /.(mp3|ogg|wav|m4a|flac)$/i.test(f)).sort();
+      return fs.readdirSync(MUSIC_DIR).filter((f) => /\.(mp3|ogg|wav|m4a|flac)$/i.test(f)).sort();
     } catch {
       return [];
     }
@@ -198,6 +212,53 @@ app.whenReady().then(() => {
   ipcMain.handle('clip:read', () => clipboard.readText());
   ipcMain.on('clip:write', (_e, text) => clipboard.writeText(text));
   ipcMain.on('win:fullscreen', () => win.setFullScreen(!win.isFullScreen()));
+  buildMenu(win);
 });
+
+/**
+ * Windows/Linux: no menu at all, so Electron's default accelerators (Ctrl+W
+ * close, Ctrl+R reload, Ctrl+V paste) never fight the terminal for keys.
+ * macOS: a real menu bar. Copy/Paste/Settings only *show* their shortcuts
+ * (registerAccelerator: false); the renderer handles the keys itself so a
+ * paste can't fire twice.
+ */
+function buildMenu(win) {
+  if (process.platform !== 'darwin') {
+    Menu.setApplicationMenu(null);
+    return;
+  }
+  const send = (action) => () => win.webContents.send('menu', action);
+  Menu.setApplicationMenu(Menu.buildFromTemplate([
+    {
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { label: 'Settings…', accelerator: 'Cmd+,', registerAccelerator: false, click: send('settings') },
+        { type: 'separator' },
+        { role: 'hide' },
+        { role: 'hideOthers' },
+        { role: 'unhide' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        { label: 'Copy', accelerator: 'Cmd+C', registerAccelerator: false, click: send('copy') },
+        { label: 'Paste', accelerator: 'Cmd+V', registerAccelerator: false, click: send('paste') },
+      ],
+    },
+    {
+      label: 'View',
+      submenu: [
+        { label: 'Play / Pause Music', click: send('music') },
+        { role: 'togglefullscreen' },
+      ],
+    },
+    { role: 'windowMenu' },
+  ]));
+}
 
 app.on('window-all-closed', () => app.quit());

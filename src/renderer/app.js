@@ -79,24 +79,37 @@ async function main() {
   const panel = new SettingsPanel(document.getElementById('panel'), update, audio, () => termScreen.focus());
 
   // ---------- input ----------
+  const isMac = bridge.platform === 'darwin';
+  const toggleMusic = () => update({ musicPaused: !settings.musicPaused });
+
+  // App keys. F-keys work everywhere; on macOS (where F-keys need fn and F11
+  // belongs to the OS) Cmd+, opens settings and the menu bar covers the rest.
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'F3') { e.preventDefault(); update({ musicPaused: !settings.musicPaused }); }
-    else if (e.key === 'F4') { e.preventDefault(); panel.toggle(settings); }
+    if (e.key === 'F3') { e.preventDefault(); toggleMusic(); }
+    else if (e.key === 'F4' || (isMac && e.metaKey && e.key === ',')) { e.preventDefault(); panel.toggle(settings); }
     else if (e.key === 'F11') { e.preventDefault(); bridge.toggleFullscreen(); }
   }, true);
+  bridge.onMenu((action) => {
+    if (action === 'settings') panel.toggle(settings);
+    else if (action === 'music') toggleMusic();
+    else if (action === 'copy') copySelection();
+    else if (action === 'paste') paste();
+  });
 
   termScreen.term.attachCustomKeyEventHandler((e) => {
     if (['F3', 'F4', 'F11'].includes(e.key)) return false;
-    // Windows Terminal-style clipboard keys. preventDefault stops the browser
-    // from also firing its own paste event, which would paste twice.
-    if (e.ctrlKey && !e.altKey && e.type === 'keydown') {
-      // Ignore auto-repeat so holding the keys can't paste over and over.
-      if (e.code === 'KeyV') { e.preventDefault(); if (!e.repeat) paste(); return false; }
-      // Ctrl+C copies only when text is selected; otherwise it's ^C (interrupt).
-      if (e.code === 'KeyC' && (e.shiftKey || termScreen.term.hasSelection())) {
-        e.preventDefault(); copySelection(); return false;
-      }
+    if (e.type !== 'keydown' || e.altKey) return true;
+    // Clipboard keys: Cmd+C/V on macOS (Ctrl+C there is always interrupt);
+    // Windows Terminal-style Ctrl+V / Ctrl+C-with-selection elsewhere.
+    // preventDefault stops the browser's own paste event, which would paste
+    // twice; ignoring auto-repeat stops a held key pasting over and over.
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+    if (!mod) return true;
+    if (e.code === 'KeyV') { e.preventDefault(); if (!e.repeat) paste(); return false; }
+    if (e.code === 'KeyC' && (isMac || e.shiftKey || termScreen.term.hasSelection())) {
+      e.preventDefault(); copySelection(); return false;
     }
+    if (isMac && e.key === ',') return false;
     return true;
   });
 

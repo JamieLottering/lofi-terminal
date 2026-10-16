@@ -9,7 +9,7 @@ export const REF_H = 720;
 
 
 const FONTS = {
-  modern: { family: '"Cascadia Mono", "Cascadia Code", Consolas, monospace', scale: 1.0, lineHeight: 1.22 },
+  modern: { family: '"Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, Monaco, monospace', scale: 1.0, lineHeight: 1.22 },
   retro: { family: '"VT323", monospace', scale: 1.3, lineHeight: 1.0 },
 };
 
