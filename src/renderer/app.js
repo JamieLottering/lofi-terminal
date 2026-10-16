@@ -90,7 +90,8 @@ async function main() {
     // Windows Terminal-style clipboard keys. preventDefault stops the browser
     // from also firing its own paste event, which would paste twice.
     if (e.ctrlKey && !e.altKey && e.type === 'keydown') {
-      if (e.code === 'KeyV') { e.preventDefault(); paste(); return false; }
+      // Ignore auto-repeat so holding the keys can't paste over and over.
+      if (e.code === 'KeyV') { e.preventDefault(); if (!e.repeat) paste(); return false; }
       // Ctrl+C copies only when text is selected; otherwise it's ^C (interrupt).
       if (e.code === 'KeyC' && (e.shiftKey || termScreen.term.hasSelection())) {
         e.preventDefault(); copySelection(); return false;
