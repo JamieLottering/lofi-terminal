@@ -1,0 +1,66 @@
+# Builds the app when a GitHub release is published and attaches the
+# installers to it. Run it manually (Actions tab -> Release -> Run workflow)
+# to get test builds as workflow artifacts without making a release.
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: --win
+            files: dist/*.exe
+          - os: macos-latest
+            target: --mac
+            files: dist/*.dmg dist/*.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Release tags like v0.2.0 set the app version (and file names).
+      - name: Set version from tag
+        if: github.event_name == 'release'
+        shell: bash
+        run: npm version "${GITHUB_REF_NAME#v}" --no-git-tag-version --allow-same-version
+
+      - name: Build
+        shell: bash
+        run: npx electron-builder ${{ matrix.target }} --publish never
+        env:
+          # Unsigned builds: don't go looking for a signing identity.
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Attach to release
+        if: github.event_name == 'release'
+        shell: bash
+        run: gh release upload "$GITHUB_REF_NAME" ${{ matrix.files }} --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Upload test build
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lofi-terminal-${{ matrix.os }}
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+          if-no-files-found: ignore

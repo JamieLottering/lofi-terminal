@@ -64,3 +64,16 @@ Every audio file in `src/assets/music/` is bundled and played in order, looping.
 
 Debug: `LOFI_DEBUG=1` logs renderer output to `%APPDATA%/lofi-terminal/renderer.log`;
 `LOFI_SCREENSHOT=out.png` captures a frame and quits.
+
+## Releases
+
+Publishing a GitHub release builds the app and attaches the installers to it:
+
+1. GitHub -> Releases -> **Draft a new release**
+2. Create a tag like `v0.2.0` (the tag sets the app version), add notes, **Publish**
+3. The *Release* workflow (Actions tab) builds on Windows and macOS runners and
+   uploads `LoFi-Terminal-Setup-x.y.z.exe`, `LoFi-Terminal-Portable-x.y.z.exe`
+   and the macOS `.dmg` / `.zip` files to the release (takes ~5-10 minutes).
+
+To test a build without releasing: Actions -> Release -> **Run workflow**;
+the files appear as artifacts on that run.

@@ -41,7 +41,8 @@
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "LoFi-Terminal-Setup-${version}.${ext}"
     },
     "npmRebuild": false,
     "mac": {
@@ -61,7 +62,11 @@
             "x64"
           ]
         }
-      ]
+      ],
+      "artifactName": "LoFi-Terminal-${version}-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "LoFi-Terminal-Portable-${version}.${ext}"
     }
   }
 }
