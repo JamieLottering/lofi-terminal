@@ -12,7 +12,8 @@ export class SettingsPanel {
     root.innerHTML = `
       <h2>SETTINGS <span>F4 to close</span></h2>
       <label>Scene<select name="scene">${Object.entries(SCENES).map(([id, s]) => `<option value="${id}">${s.name}</option>`).join('')}</select></label>
-      <div class="status">Music: <b id="music-status">-</b></div>
+      <div class="music-row"><button type="button" id="music-prev" title="Previous">◀◀</button><button type="button" id="music-toggle">Pause</button><button type="button" id="music-next" title="Next">▶▶</button></div>
+      <div class="status"><b id="music-status">-</b></div>
       <label>Music volume<input name="musicVolume" type="range" min="0" max="1" step="0.01"></label>
       <label>Font<select name="font"><option value="modern">Modern</option><option value="retro">Retro (VT323)</option></select></label>
       <label>Font size<input name="fontSize" type="range" min="11" max="24" step="1"></label>
@@ -21,8 +22,22 @@ export class SettingsPanel {
       <p class="hint">${HINT}</p>
     `;
     const statusEl = root.querySelector('#music-status');
-    audio.onStatus = (s) => { statusEl.textContent = s; };
-    statusEl.textContent = audio.status;
+    const toggleBtn = root.querySelector('#music-toggle');
+    const showStatus = (s) => {
+      statusEl.textContent = s;
+      toggleBtn.textContent = audio.paused ? '▶ Play' : '❚❚ Pause';
+    };
+    audio.onStatus = showStatus;
+    showStatus(audio.status);
+    toggleBtn.addEventListener('click', () => update({ musicPaused: !audio.paused }));
+    // Skipping always plays; clear a saved "paused" so it sticks.
+    const skip = (dir) => {
+      const wasPaused = audio.paused;
+      audio.skip(dir);
+      if (wasPaused) update({ musicPaused: false });
+    };
+    root.querySelector('#music-prev').addEventListener('click', () => skip(-1));
+    root.querySelector('#music-next').addEventListener('click', () => skip(1));
 
     root.querySelectorAll('input, select').forEach((el) => {
       const ev = el.type === 'text' ? 'change' : 'input';

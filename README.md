@@ -46,7 +46,9 @@ Every other key goes straight to the terminal. Settings are saved in
 
 ## Music
 
-Every audio file in `src/assets/music/` is bundled and played in order, looping.
+Every audio file in `src/assets/music/` is bundled and played one after another
+(alphabetically), looping back to the first. F4 has play/pause, previous, next
+and volume controls.
 
 ## Adding a scene
 

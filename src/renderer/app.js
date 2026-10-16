@@ -66,6 +66,7 @@ async function main() {
 
   // ---------- settings application ----------
   const audio = new SoundSystem(await bridge.music.list());
+  window.__lofi = { audio }; // debug handle for LOFI_EVAL tests
   function apply(s) {
     settings = s;
     if (s.scene !== sceneId) switchScene(s.scene);

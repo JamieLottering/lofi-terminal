@@ -65,6 +65,19 @@ export class SoundSystem {
     else this.load();
   }
 
+  /**
+   * Skip to the next (+1) or previous (-1) track and play it. "Previous"
+   * restarts the current track if it's more than 3s in, like most players.
+   */
+  skip(dir) {
+    if (!this.tracks.length) return;
+    if (!(dir < 0 && this.el.currentTime > 3)) {
+      this.index = (this.index + dir + this.tracks.length) % this.tracks.length;
+    }
+    this.paused = false;
+    this.load();
+  }
+
   pause() {
     this.paused = true;
     this.el.pause();
