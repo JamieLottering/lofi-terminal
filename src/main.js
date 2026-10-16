@@ -159,19 +159,6 @@ function createWindow() {
         setTimeout(() => win.webContents.executeJavaScript(process.env.LOFI_EVAL).catch(console.error),
           Number(process.env.LOFI_SCREENSHOT_DELAY || 6000) - 3000);
       }
-      // Optional input smoke test: press a key shortly before the capture.
-      if (process.env.LOFI_TEST_KEY) {
-        setTimeout(() => {
-          win.focus();
-          win.webContents.focus();
-          const [w, h] = win.getContentSize();
-          for (const type of ['mouseDown', 'mouseUp']) {
-            win.webContents.sendInputEvent({ type, x: Math.round(w / 2), y: Math.round(h / 2), button: 'left', clickCount: 1 });
-          }
-          win.webContents.sendInputEvent({ type: 'keyDown', keyCode: process.env.LOFI_TEST_KEY });
-          win.webContents.sendInputEvent({ type: 'keyUp', keyCode: process.env.LOFI_TEST_KEY });
-        }, Number(process.env.LOFI_SCREENSHOT_DELAY || 6000) - 1500);
-      }
       setTimeout(async () => {
         const img = await win.webContents.capturePage();
         fs.writeFileSync(process.env.LOFI_SCREENSHOT, img.toPNG());

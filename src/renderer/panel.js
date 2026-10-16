@@ -14,7 +14,7 @@ export class SettingsPanel {
       <label>Font size<input name="fontSize" type="range" min="11" max="24" step="1"></label>
       <label>CRT effect strength<input name="crtStrength" type="range" min="0" max="1" step="0.01"></label>
       <label class="row"><input name="postFx" type="checkbox"> Screen glow</label>
-      <p class="hint">F3 play/pause music &middot; F4 settings &middot; F11 fullscreen &middot; Ctrl+Shift+C/V copy/paste &middot; right-click copy/paste</p>
+      <p class="hint">F3 play/pause music &middot; F4 settings &middot; F11 fullscreen &middot; Ctrl+V paste &middot; Ctrl+C copy (with selection) &middot; right-click copy/paste</p>
     `;
     const statusEl = root.querySelector('#music-status');
     audio.onStatus = (s) => { statusEl.textContent = s; };

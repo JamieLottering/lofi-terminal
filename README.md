@@ -18,7 +18,8 @@ On launch it starts PowerShell running `claude.cmd` (Claude Code must be install
 | F3 | Play / pause music |
 | F4 | Settings (scene, volume, font, CRT strength, screen glow) |
 | F11 | Fullscreen |
-| Ctrl+Shift+C / V | Copy / paste |
+| Ctrl+V or Ctrl+Shift+V | Paste |
+| Ctrl+C (with selection) or Ctrl+Shift+C | Copy (Ctrl+C with no selection still interrupts) |
 | Right-click | Copy selection, or paste if nothing selected |
 | Drag on screen | Select text |
 | Wheel | Scroll |
