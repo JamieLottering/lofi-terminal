@@ -96,14 +96,21 @@ function startShell(win, cols, rows) {
     shell = null;
   }
   const { file, args } = shellCommand();
-  const proc = pty.spawn(file, args, {
-    name: 'xterm-256color',
-    cols,
-    rows,
-    cwd: os.homedir(),
-    // Apps launched from Finder get no LANG; without it zsh mangles UTF-8.
-    env: { LANG: 'en_US.UTF-8', ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
-  });
+  let proc;
+  try {
+    proc = pty.spawn(file, args, {
+      name: 'xterm-256color',
+      cols,
+      rows,
+      cwd: os.homedir(),
+      // Apps launched from Finder get no LANG; without it zsh mangles UTF-8.
+      env: { LANG: 'en_US.UTF-8', ...process.env, TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+    });
+  } catch (err) {
+    // Show the failure on the CRT rather than as a main-process crash dialog.
+    if (!win.isDestroyed()) win.webContents.send('pty:data', `\x1b[31mCouldn't start ${file}: ${err.message}\x1b[0m\r\n`);
+    return;
+  }
   shell = proc;
   proc.onData((data) => {
     if (!win.isDestroyed()) win.webContents.send('pty:data', data);

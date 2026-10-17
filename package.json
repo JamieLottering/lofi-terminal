@@ -45,6 +45,7 @@
       "artifactName": "LoFi-Terminal-Setup-${version}.${ext}"
     },
     "npmRebuild": false,
+    "afterPack": "scripts/after-pack.js",
     "mac": {
       "category": "public.app-category.developer-tools",
       "target": [
