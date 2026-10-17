@@ -1,11 +1,15 @@
-# Builds the app when a GitHub release is published and attaches the
-# installers to it. Run it manually (Actions tab -> Release -> Run workflow)
-# to get test builds as workflow artifacts without making a release.
+# Builds the app when a GitHub release is created and attaches the
+# installers to it. Create the release as a DRAFT: the workflow uploads the
+# installers to the draft, then publishes it once every build has succeeded.
+# Published releases are immutable, so publishing before the uploads finish
+# would lock the release with no installers.
+# Run it manually (Actions tab -> Release -> Run workflow) to get test
+# builds as workflow artifacts without making a release.
 name: Release
 
 on:
   release:
-    types: [published]
+    types: [created]
   workflow_dispatch:
 
 permissions:
@@ -25,6 +29,17 @@ jobs:
             files: dist/*.dmg dist/*.zip
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Check release is still a draft
+        if: github.event_name == 'release'
+        shell: bash
+        run: |
+          if [ "$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)" != "true" ]; then
+            echo "::error::Release $GITHUB_REF_NAME is already published and can't take assets. Delete it and create a draft instead."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -47,7 +62,7 @@ jobs:
           # Unsigned builds: don't go looking for a signing identity.
           CSC_IDENTITY_AUTO_DISCOVERY: false
 
-      - name: Attach to release
+      - name: Attach to draft release
         if: github.event_name == 'release'
         shell: bash
         run: gh release upload "$GITHUB_REF_NAME" ${{ matrix.files }} --clobber
@@ -64,3 +79,16 @@ jobs:
             dist/*.dmg
             dist/*.zip
           if-no-files-found: ignore
+
+  # Only runs after both builds succeed, so a failed build leaves the draft unpublished.
+  publish:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish release
+        shell: bash
+        run: gh release edit "$GITHUB_REF_NAME" --draft=false
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
